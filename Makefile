@@ -6,6 +6,7 @@ LDFLAGS = $(shell pkg-config --libs libvirt libvirt-qemu)
 
 SRC = main.c \
 	  log.c \
+    kernel.c \
 	  version.c \
 	  global_data.c \
 	  symbols.c \

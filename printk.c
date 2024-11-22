@@ -14,9 +14,11 @@
  */
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 
 #include "xutil.h"
+#include "client.h"
 #include "log.h"
 #include "defs.h"
 #include "printk.h"
@@ -38,7 +40,7 @@ enum desc_state {
 
 static char *vmcoreinfo_buf = NULL;
 
-static char *vmcoreinfo_read_string(const char *key)
+char *vmcoreinfo_read_string(const char *key)
 {
     const char *buf = vmcoreinfo_buf;
     char *value_string = NULL;
@@ -84,9 +86,9 @@ long datatype_info(char *name, char *member, int datatype)
     return value;
 }
 
-static void vmcoreinfo_init()
+void vmcoreinfo_init()
 {
-    char *buf, *n;
+    char *buf;
     size_t vmcoreinfo_size;
     ulong vmcoreinfo_data;
 
@@ -97,7 +99,7 @@ static void vmcoreinfo_init()
     buf = vmcoreinfo_buf;
     get_symbol_data("vmcoreinfo_data", sizeof(vmcoreinfo_data), &vmcoreinfo_data);
     if (readmem(vmcoreinfo_data, KVADDR, buf, vmcoreinfo_size)) {
-        pr_err("cannot read vmcoreinfo_data");
+        pr_err("cannot read vmcoreinfo_data\n");
         goto err;
     }
     buf[vmcoreinfo_size] = '\n';
@@ -108,6 +110,14 @@ static void vmcoreinfo_init()
         }
         fprintf(fp, "\n");
     }
+    return;
+err:
+    xfree(vmcoreinfo_buf);
+}
+
+static void offsets_init()
+{
+    char *n;
 
     n = "printk_info";
     STRUCT_SIZE_INIT(printk_info, n);
@@ -132,9 +142,6 @@ static void vmcoreinfo_init()
     STRUCT_SIZE_INIT(prb_data_ring, n);
     MEMBER_OFFSET_INIT(prb_data_ring_size_bits, n, "size_bits");
     MEMBER_OFFSET_INIT(prb_data_ring_data, n, "data");
-
-err:
-    xfree(vmcoreinfo_buf);
 }
 
 static enum desc_state get_desc_state(unsigned long id,
@@ -219,7 +226,7 @@ void dump_lockless_record_log()
     struct prb_map m;
 
     if (SIZE(printk_info) == 0) {
-        vmcoreinfo_init();
+        offsets_init();
     }
 
     get_symbol_data("prb", sizeof(char *), &kaddr);

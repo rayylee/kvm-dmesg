@@ -17,6 +17,7 @@
 
 #include "defs.h"
 #include "log.h"
+#include "client.h"
 
 #define MAX_LINE_LENGTH 256
 

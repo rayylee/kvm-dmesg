@@ -33,6 +33,7 @@
 #include "xutil.h"
 #include "defs.h"
 #include "log.h"
+#include "client.h"
 
 guest_client_t *guest_client = NULL;
 

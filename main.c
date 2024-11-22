@@ -406,6 +406,9 @@ int main(int argc, char *argv[])
 
     x86_64_post_reloc();
 
+    vmcoreinfo_init();
+    kernel_init();
+
     if (kernel_symbol_exists("prb")) {
         dump_lockless_record_log();
         goto exit;

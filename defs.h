@@ -16,11 +16,11 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
-#include <stdint.h>
+#include <sys/types.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
-#include "client.h"
 
 #undef TRUE
 #undef FALSE
@@ -42,7 +42,6 @@ static inline int string_exists(char *s) { return (s ? TRUE : FALSE); }
 
 typedef uint64_t physaddr_t;
 
-typedef unsigned long int ulong;
 typedef unsigned long long int ulonglong;
 
 #define CRASHDEBUG(x) (pc->debug >= (x))
@@ -56,6 +55,7 @@ struct program_context {
 struct kernel_table {
     ulong flags;
     ulong relocate;
+	uint kernel_version[3];
 };
 
 struct machdep_table {
@@ -76,6 +76,8 @@ struct machdep_table {
 };
 
 extern struct machdep_table *machdep;
+
+#define NULLCHAR ('\0')
 
 #define IS_LAST_PGD_READ(pgd)     ((ulong)(pgd) == machdep->last_pgd_read)
 #define IS_LAST_PMD_READ(pmd)     ((ulong)(pmd) == machdep->last_pmd_read)
@@ -254,4 +256,10 @@ int kernel_symbol_exists(char *s);
  */
 void get_symbol_data(char *symbol, long size, void *local);
 
+void kernel_init(void);
+long datatype_info(char *name, char *member, int datatype);
+void parse_kernel_version(char *);
+void vmcoreinfo_init();
+void die(const char *err, ...);
+char *vmcoreinfo_read_string(const char *key);
 #endif
