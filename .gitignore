@@ -1,6 +1,9 @@
 kvm-dmesg
 *.o
 tags
+GPATH
+GRTAGS
+GTAGS
 build
 tests/kvm-dmesg-ci
 scripts/*.tar.gz

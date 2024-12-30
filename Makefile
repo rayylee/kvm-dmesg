@@ -38,11 +38,15 @@ test: $(TARGET)
 	$Q bash tests/base.sh
 
 clean:
-	$(Q) $(RM) $(OBJ) $(TARGET) tags
+	$(Q) $(RM) $(OBJ) $(TARGET) tags GPATH GRTAGS GTAGS
 
 tags:
 	$(Q) echo "  GEN" $@
 	$(Q) rm -f tags
 	$(Q) find . -name '*.[hc]' -print | xargs ctags -a
+
+gtags:
+	$(Q) echo "  GEN" $@
+	$(Q) find . -name '*.[hc]' -print | gtags -i -f -
 
 .PHONY: all clean tags
