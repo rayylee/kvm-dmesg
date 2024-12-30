@@ -3,6 +3,9 @@ compile_commands.json
 *.o
 .*.o.cmd
 tags
+GPATH
+GRTAGS
+GTAGS
 build
 .cache
 .vim-bookmarks
