@@ -9,6 +9,7 @@ ifeq ($(STATIC), y)
 endif
 
 SRC = main.c \
+	  x86_64.c \
 	  log.c \
 	  kernel.c \
 	  version.c \

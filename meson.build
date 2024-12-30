@@ -9,6 +9,7 @@ ldflags = ['-ldl']
 # Sources
 sources = [
   'main.c',
+  'x86_64.c',
   'log.c',
   'version.c',
   'kernel.c',

@@ -1,3 +1,18 @@
+/* client.c
+ *
+ * Copyright (C) 2024 Ray Lee
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
 #include "defs.h"
 #include "xutil.h"
 #include "mem.h"
@@ -12,17 +27,18 @@ int get_cr3_idtr(uint64_t *cr3, uint64_t *idtr)
     return 0;
 }
 
+int kvtop(ulong kvaddr, physaddr_t *paddr)
+{
+    return machdep->kvtop(kvaddr, paddr);
+}
+
 int readmem(uint64_t addr, int memtype, void *buffer, long size)
 {
     physaddr_t paddr = 0;
 
     switch (memtype) {
         case KVADDR:
-            if (addr >= __START_KERNEL_map) {
-                paddr = ((addr) - (ulong)__START_KERNEL_map + machdep->machspec->phys_base);
-            } else {
-                paddr = ((addr) - PAGE_OFFSET);
-            }
+            kvtop(addr, &paddr);
             break;
         case PHYSADDR:
             paddr = addr;

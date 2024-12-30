@@ -59,6 +59,9 @@ struct kernel_table {
 };
 
 struct machdep_table {
+	ulong flags;
+	int (*kvtop)(ulong, physaddr_t *);
+
 	char *pgd;
 	char *pud;
 	char *pmd;
@@ -74,6 +77,8 @@ struct machdep_table {
 	unsigned long pageoffset;
 	ulonglong pagemask;
 };
+
+#define VMEMMAP           (0x400000)
 
 extern struct machdep_table *machdep;
 
@@ -185,19 +190,44 @@ struct symbol_table_data {
 
 #define PAGEBASE(X)     (((ulong)(X)) & (ulong)machdep->pagemask)
 
+/*
+ * x86_64.c
+ */
+void x86_64_init();
+void x86_64_post_reloc();
+int x86_64_kvtop(ulong kvaddr, physaddr_t *paddr);
+
 struct machine_specific {
     ulong page_offset;
+    ulong vmalloc_start_addr;
+    ulong vmalloc_end;
+    ulong vmemmap_vaddr;
+    ulong vmemmap_end;
     ulong phys_base;
     ulong pgdir_shift;
     ulong ptrs_per_pgd;
     ulong physical_mask_shift;
 };
 
+#define KSYMS_START    (0x1)
+
 #define PAGE_OFFSET     (machdep->machspec->page_offset)
+#define VMALLOC_START   (machdep->machspec->vmalloc_start_addr)
+#define VMALLOC_END     (machdep->machspec->vmalloc_end)
+#define VMEMMAP_VADDR   (machdep->machspec->vmemmap_vaddr)
+#define VMEMMAP_END     (machdep->machspec->vmemmap_end)
 
 #define __START_KERNEL_map    0xffffffff80000000UL
 
+#define VMALLOC_START_ADDR_2_6_11  0xffffc20000000000
+#define VMALLOC_END_2_6_11         0xffffe1ffffffffff
+
+#define VMEMMAP_VADDR_2_6_24       0xffffe20000000000
+#define VMEMMAP_END_2_6_24         0xffffe2ffffffffff
+
 #define PAGE_OFFSET_2_6_27         0xffff880000000000
+
+#define IS_VMALLOC_ADDR(X)    x86_64_IS_VMALLOC_ADDR((ulong)(X))
 
 /*
  * the default page table level for x86_64:
@@ -230,6 +260,18 @@ struct machine_specific {
 #define PAGE_SHIFT             12
 #define PAGE_SIZE              (1UL << PAGE_SHIFT)
 #define PHYSICAL_PAGE_MASK    (~(PAGE_SIZE-1) & __PHYSICAL_MASK )
+
+#define KILOBYTES(x)  ((x) * (1024))
+#define MEGABYTES(x)  ((x) * (1048576))
+#define GIGABYTES(x)  ((x) * (1073741824))
+#define TB_SHIFT (40)
+#define TERABYTES(x) ((x) * (1UL << TB_SHIFT))
+
+#define MEGABYTE_MASK (MEGABYTES(1)-1)
+
+#define SIZEOF_64BIT  (8)
+#define SIZEOF_32BIT  (4)
+#define SIZEOF_16BIT  (2)
 
 /*
  *  Global data (global_data.c)

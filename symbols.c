@@ -36,6 +36,8 @@ int symbol_needed(const char *symbol)
         "vmcoreinfo_size",
         "page_offset_base",
         "vmalloc_base",
+        "vmemmap_base",
+        "vmemmap_populate",
         "prb"
     };
     size_t array_size = sizeof(symtab_array) / sizeof(symtab_array[0]);

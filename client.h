@@ -19,6 +19,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "defs.h"
+
 typedef enum {
     GUEST_NAME,
     GUEST_MEMORY,
@@ -35,6 +37,7 @@ typedef struct {
 
 int get_cr3_idtr(uint64_t *cr3, uint64_t *idtr);
 int readmem(uint64_t addr, int memtype, void *buffer, long size);
+int kvtop(ulong kvaddr, physaddr_t *paddr);
 
 int guest_client_new(char *ac, guest_access_t ty);
 int guest_client_release();

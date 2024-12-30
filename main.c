@@ -34,76 +34,6 @@
 #include "version.h"
 #include "printk.h"
 
-struct machine_specific x86_64_machine_specific = { 0 };
-
-static ulong * x86_64_kpgd_offset(ulong kvaddr)
-{
-    ulong *pgd;
-    pgd = ((ulong *)machdep->pgd) + pgd_index(kvaddr);
-    return pgd;
-}
-
-ulong x86_64_pud_offset(ulong pgd_pte, ulong vaddr)
-{
-    ulong *pud;
-    ulong pud_paddr;
-    ulong pud_pte;
-
-    pud_paddr = pgd_pte & PHYSICAL_PAGE_MASK;
-
-    FILL_PUD(pud_paddr, PAGESIZE());
-    pud = ((ulong *)pud_paddr) + pud_index(vaddr);
-    pud_pte = ULONG(machdep->pud + PAGEOFFSET(pud));
-
-    return pud_pte;
-}
-
-ulong x86_64_pmd_offset(ulong pud_pte, ulong vaddr)
-{
-    ulong *pmd;
-    ulong pmd_paddr;
-    ulong pmd_pte;
-
-    pmd_paddr = pud_pte & PHYSICAL_PAGE_MASK;
-
-    FILL_PMD(pmd_paddr, PAGESIZE());
-
-    pmd = ((ulong *)pmd_paddr) + pmd_index(vaddr);
-    pmd_pte = ULONG(machdep->pmd + PAGEOFFSET(pmd));
-    return pmd_pte;
-}
-
-ulong x86_64_pte_offset(ulong pmd_pte, ulong vaddr)
-{
-    ulong *ptep;
-    ulong pte_paddr;
-    ulong pte;
-
-    pte_paddr = pmd_pte & PHYSICAL_PAGE_MASK;
-
-    FILL_PTBL(pte_paddr, PAGESIZE());
-    ptep = ((ulong *)pte_paddr) + pte_index(vaddr);
-    pte = ULONG(machdep->ptbl + PAGEOFFSET(ptep));
-
-    return pte;
-}
-
-int x86_64_kvtop(ulong kvaddr, physaddr_t *paddr)
-{
-    ulong *pgd;
-    ulong pud_pte;
-    ulong pmd_pte;
-    ulong pte;
-
-    pgd = x86_64_kpgd_offset(kvaddr);
-    pud_pte = x86_64_pud_offset(*pgd, kvaddr);
-    pmd_pte = x86_64_pmd_offset(pud_pte, kvaddr);
-    pte = x86_64_pte_offset(pmd_pte, kvaddr);
-    *paddr = (PAGEBASE(pte) & PHYSICAL_PAGE_MASK) + PAGEOFFSET(kvaddr);
-
-    return 0;
-}
-
 ulong get_vec0_addr(ulong idtr)
 {
     struct gate_struct64 {
@@ -156,7 +86,7 @@ int calc_kaslr_offset(ulong *kaslr_offset, ulong *phys_base)
     machdep->machspec->ptrs_per_pgd = PTRS_PER_PGD;
 
     readmem(pgd, PHYSADDR, machdep->pgd, PAGESIZE());
-    x86_64_kvtop(idtr, &idtr_paddr);
+    kvtop(idtr, &idtr_paddr);
 
     divide_error_vmcore = get_vec0_addr(idtr_paddr);
     *kaslr_offset = divide_error_vmcore - st->divide_error_vmlinux;
@@ -173,30 +103,6 @@ int calc_kaslr_offset(ulong *kaslr_offset, ulong *phys_base)
     }
 
     return 0;
-}
-
-void x86_64_init()
-{
-    machdep->machspec = &x86_64_machine_specific;
-
-    machdep->pagesize = 4096;
-    machdep->pageoffset = machdep->pagesize - 1;
-    machdep->pagemask = ~((ulonglong)machdep->pageoffset);
-
-    machdep->pgd = malloc(PAGESIZE());
-    machdep->pud = malloc(PAGESIZE());
-    machdep->pmd = malloc(PAGESIZE());
-    machdep->ptbl = malloc(PAGESIZE());
-
-    machdep->machspec->page_offset = PAGE_OFFSET_2_6_27;
-}
-
-void x86_64_post_reloc()
-{
-    if (kernel_symbol_exists("page_offset_base")) {
-        get_symbol_data("page_offset_base", sizeof(ulong),
-            &machdep->machspec->page_offset);
-    }
 }
 
 void derive_kaslr_offset()
