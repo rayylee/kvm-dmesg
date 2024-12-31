@@ -141,16 +141,20 @@ ulong symbol_value(char *symbol)
     return (sp->value);
 }
 
+ulong relocate(ulong symval)
+{
+    if (kt->flags & RELOC_SET) {
+        symval = symval - kt->relocate;
+    }
+    return symval;
+}
+
 void get_symbol_data(char *symbol, long size, void *local)
 {
     struct syment *sp;
 
     if ((sp = symbol_search(symbol))) {
-        uint64_t addr = sp->value;
-        if (kt->flags & RELOC_SET) {
-            addr = addr - kt->relocate;
-        }
-        readmem(addr, KVADDR, local, size);
+        readmem(relocate(sp->value), KVADDR, local, size);
     }
     else
         pr_err("cannot resolve symbol");
