@@ -21,7 +21,8 @@ SRC = main.c \
 	  parse_hmp.c \
 	  client.c \
 	  libvirt_client.c \
-	  qmp_client.c
+	  qmp_client.c \
+	  cmd.c
 
 OBJ = $(SRC:.c=.o)
 

@@ -22,6 +22,7 @@ sources = [
   'client.c',
   'libvirt_client.c',
   'qmp_client.c',
+  'cmd.c',
 ]
 
 # Build executable

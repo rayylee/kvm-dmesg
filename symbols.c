@@ -38,6 +38,8 @@ int symbol_needed(const char *symbol)
         "vmalloc_base",
         "vmemmap_base",
         "vmemmap_populate",
+        "__start_BTF",
+        "__stop_BTF",
         "prb"
     };
     size_t array_size = sizeof(symtab_array) / sizeof(symtab_array[0]);

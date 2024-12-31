@@ -33,6 +33,7 @@
 #include "client.h"
 #include "version.h"
 #include "printk.h"
+#include "cmd.h"
 
 ulong get_vec0_addr(ulong idtr)
 {
@@ -267,11 +268,12 @@ static int parse_options(int argc, char **argv)
 {
     int ch;
     int idx = 0;
-    const char *short_opts = "hvd:";
+    const char *short_opts = "hvd:c:";
     static const struct option long_opts[] = {
         {"help",      no_argument,       NULL, 'h'},
         {"version",   no_argument,       NULL, 'v'},
         {"debug",     required_argument, NULL, 'd'},
+        {"cmd",       required_argument, NULL, 'c'},
         {NULL,        0,                 NULL, 0  }
     };
 
@@ -288,6 +290,9 @@ static int parse_options(int argc, char **argv)
                 if (pc->debug > 0) {
                     log_init(LOGLEVEL_DEBUG);
                 }
+                break;
+            case 'c':
+                pc->cmd = optarg;
                 break;
             case '?':
                 fprintf(fp, "Try `%s --help' for more information.\n", argv[0]);
@@ -367,6 +372,11 @@ int main(int argc, char *argv[])
 
     vmcoreinfo_init();
     kernel_init();
+
+    if (pc->cmd) {
+        handle_command(pc->cmd);
+        goto exit;
+    }
 
     if (kernel_symbol_exists("prb")) {
         dump_lockless_record_log();

@@ -48,6 +48,7 @@ typedef unsigned long long int ulonglong;
 
 struct program_context {
     ulong debug;                    /* level of debug */
+    char *cmd;
 };
 
 #define RELOC_SET            (0x2000000)
@@ -288,6 +289,7 @@ extern struct symbol_table_data symbol_table_data, *st;
 /*
  * symbols.c
  */
+ulong relocate(ulong symval);
 void symtab_init(const char*);
 ulong symbol_value(char *);
 int kernel_symbol_exists(char *s);
