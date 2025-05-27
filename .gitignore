@@ -3,5 +3,7 @@ compile_commands.json
 *.o
 tags
 build
+.cache
+.vim-bookmarks
 tests/kvm-dmesg-ci
 scripts/*.tar.gz
