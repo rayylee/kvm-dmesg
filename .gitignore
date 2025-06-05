@@ -1,6 +1,7 @@
 kvm-dmesg
 compile_commands.json
 *.o
+.*.o.cmd
 tags
 build
 .cache

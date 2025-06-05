@@ -32,13 +32,18 @@ $(TARGET): $(OBJ)
 
 %.o: %.c
 	$(Q) echo "  CC      " $@
-	$(Q) $(CC) -c $< -o $@ $(CFLAGS)
+	$(Q) $(CC) $(CFLAGS) -c -o $@ $<
+	$(Q) echo "savedcmd_$@ := $(CC) $(CFLAGS) -c -o $@ $<" > .$(@F).cmd
+
+compile_commands.json: $(TARGET)
+	python3 scripts/gen_compile_commands.py
+
 
 test: $(TARGET)
-	$Q bash tests/base.sh
+	$(Q) bash tests/base.sh
 
 clean:
-	$(Q) $(RM) $(OBJ) $(TARGET) tags
+	$(Q) $(RM) $(OBJ) $(TARGET) tags .*.cmd
 
 tags:
 	$(Q) echo "  GEN" $@
