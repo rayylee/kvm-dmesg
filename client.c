@@ -44,8 +44,7 @@ int guest_client_new(char *ac, guest_access_t ty)
             if (libvirt_client_init(ac))
                 return -1;
             c->pid = libvirt_get_pid(ac);
-            libvirt_gpa2hva(0, &c->hva_base);
-            if (mem_init(c->pid, c->hva_base) == 0) {
+            if (mem_init(c->pid, libvirt_gpa2hva) == 0) {
                 c->readmem = mem_read;
             } else {
                 c->readmem = libvirt_readmem;
@@ -62,8 +61,7 @@ int guest_client_new(char *ac, guest_access_t ty)
             if (qmp_client_init(ac))
                 return -1;
             c->pid = qmp_get_pid(ac);
-            qmp_gpa2hva(0, &c->hva_base);
-            if (mem_init(c->pid, c->hva_base) == 0) {
+            if (mem_init(c->pid, qmp_gpa2hva) == 0) {
                 c->readmem = mem_read;
             } else {
                 c->readmem = qmp_readmem;
