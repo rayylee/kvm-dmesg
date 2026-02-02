@@ -126,7 +126,7 @@ def qemu_run(vmlinux_path):
         '-monitor', 'unix:/tmp/mon.sock,server,nowait'
     ]
 
-    if os.path.exists('/dev/kvm'):
+    if os.path.exists('/dev/kvm') and os.environ.get('CI') != 'true':
         command.extend(['-accel', 'kvm', '-cpu', 'host'])
 
     try:
@@ -145,7 +145,7 @@ def qemu_run(vmlinux_path):
                 print("\nKernel booted successfully!")
                 return True
 
-        print("\nKernel did not boot successfully.")
+        print("\n" + Colors.RED + "Kernel did not boot successfully." + Colors.ENDC)
         process.terminate()
         return False
 
@@ -188,6 +188,7 @@ def test_all(kernels_dic):
     formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', current_time)
     if nr_passed == nr_tests:
         print("\n" + Colors.GREEN + formatted_time + f" Tests {nr_passed}/{nr_tests} passed!" + Colors.ENDC)
+        sys.exit(0)
     elif nr_passed < nr_tests:
         nr_failed = nr_tests - nr_passed
         print("\n" + Colors.RED + formatted_time + f" Tests {nr_failed}/{nr_tests} failed." + Colors.ENDC)
@@ -196,3 +197,4 @@ def test_all(kernels_dic):
 if __name__ == "__main__":
     kernels = traverse_kernels("%s/kvm-dmesg-ci/kernels" % os.getcwd())
     test_all(kernels)
+    sys.exit(1)
