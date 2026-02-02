@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main, dev ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3 qemu-system-x86
+
+    - name: Check QEMU availability
+      run: |
+        which qemu-system-x86_64 || echo "QEMU not found in PATH"
+        ls -la /usr/bin/qemu* || echo "No QEMU binaries found"
+
+    - name: Build project
+      run: |
+        set -x
+        make clean || true
+        make Q=  # Build without suppressing output
+
+    - name: Verify build
+      run: |
+        ls -la kvm-dmesg
+        file kvm-dmesg
+
+    - name: Run full tests
+      env:
+        CI: "true"
+      run: |
+        set -x  # Enable verbose output
+        cd tests
+
+        echo "Starting full test execution..."
+
+        # Try to clone test repository
+        if [ ! -d "kvm-dmesg-ci" ]; then
+            echo "Cloning test repository..."
+            git clone https://github.com/rayylee/kvm-dmesg-ci.git -b master || {
+                echo "WARNING: Could not clone test repository, skipping full tests"
+                exit 0
+            }
+        fi
+
+        # Check if test kernels are available
+        if [ ! -d "kvm-dmesg-ci/kernels" ]; then
+            echo "WARNING: No test kernels found, skipping full tests"
+            exit 0
+        fi
+
+        # Skip - Tcg `Triple fault` bug for el10
+        rm -rf kvm-dmesg-ci/kernels/el10 || true
+
+        # Run the test script and capture exit code
+        timeout 180s bash -x base.sh
+        TEST_EXIT_CODE=$?
+
+        echo "Full test script exited with code: $TEST_EXIT_CODE"
+        if [ $TEST_EXIT_CODE -ne 0 ]; then
+          echo "FULL TESTS FAILED!"
+          exit $TEST_EXIT_CODE
+        else
+          echo "FULL TESTS PASSED!"
+        fi
