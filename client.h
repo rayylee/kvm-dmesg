@@ -28,7 +28,6 @@ typedef enum {
 typedef struct {
     guest_access_t ty;
     pid_t pid;
-    uint64_t hva_base;
     int (*get_registers)(uint64_t*, uint64_t*, uint64_t*);
     int (*readmem)(uint64_t, void*, size_t);
 } guest_client_t;

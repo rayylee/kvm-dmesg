@@ -15,12 +15,15 @@
 #ifndef __MEM_H__
 #define __MEM_H__
 
+#include <stdint.h>
+#include <sys/types.h>
+
 typedef struct {
     int mem_fd;
-    uint64_t hva_base;
+    int (*gpa2hva)(uint64_t gpa, uint64_t *hva);
 } proc_mem_t;
 
-int mem_init(pid_t pid, uint64_t hva_base);
+int mem_init(pid_t pid, int (*gpa2hva)(uint64_t, uint64_t*));
 int mem_uninit();
 int mem_read(uint64_t addr, void *buffer, size_t size);
 

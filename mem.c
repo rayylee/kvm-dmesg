@@ -28,7 +28,7 @@
 
 static proc_mem_t *proc_mem = NULL;
 
-int mem_init(pid_t pid, uint64_t hva_base)
+int mem_init(pid_t pid, int (*gpa2hva)(uint64_t, uint64_t*))
 {
     int fd;
     char mem_path[32];
@@ -46,7 +46,7 @@ int mem_init(pid_t pid, uint64_t hva_base)
     }
 
     proc_mem->mem_fd = fd;
-    proc_mem->hva_base = hva_base;
+    proc_mem->gpa2hva = gpa2hva;
 
     return 0;
 }
@@ -65,12 +65,25 @@ int mem_uninit()
 
 int mem_read(uint64_t addr, void *buffer, size_t size)
 {
+    uint64_t hva;
+
     if (!proc_mem || proc_mem->mem_fd <= 0)
         return -1;
 
-    if (lseek(proc_mem->mem_fd, proc_mem->hva_base + addr, SEEK_SET) == -1) {
-        pr_err("Failed to seek to the specified memory address");
-        return -1;
+    if (!proc_mem->gpa2hva)
+      return -1;
+
+    /*
+     * When the memory is greater than 4GB, the virtual machine's memory is not
+     * contiguous in the QEMU's address space, so it is always necessary to
+     * calculate the HVA based on the GPA.
+     */
+    if (proc_mem->gpa2hva(addr, &hva) < 0)
+      return -1;
+
+    if (lseek(proc_mem->mem_fd, hva, SEEK_SET) == -1) {
+      pr_err("Failed to seek to the specified memory address");
+      return -1;
     }
 
     ssize_t bytes_read = xread(proc_mem->mem_fd, buffer, size);

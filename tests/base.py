@@ -120,7 +120,7 @@ def qemu_run(vmlinux_path):
         '-nographic',
         '-no-reboot',
         '-append', 'console=ttyS0',
-        '-m', '1G',
+        '-m', '4G',
         '-smp', '1',
         '-qmp', 'unix:/tmp/qmp.sock,server,nowait',
         '-monitor', 'unix:/tmp/mon.sock,server,nowait'
