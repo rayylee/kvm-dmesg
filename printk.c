@@ -38,8 +38,6 @@ enum desc_state {
     desc_reusable	= 0x3,	/* free, not yet used by any writer */
 };
 
-static char *vmcoreinfo_buf = NULL;
-
 char *vmcoreinfo_read_string(const char *key)
 {
     const char *buf = vmcoreinfo_buf;
@@ -89,14 +87,24 @@ long datatype_info(char *name, char *member, int datatype)
 void vmcoreinfo_init()
 {
     char *buf;
-    size_t vmcoreinfo_size;
-    ulong vmcoreinfo_data;
+    ulong vmcoreinfo_data_sym;
     ulong osrelease;
 
-    // ASCII value of "OSRELEAS"
-    // crash> rd vmcoreinfo_data 1
-    // ffffffffbd56ca60:  5341454c4552534f                    OSRELEAS
-    osrelease=0x5341454c4552534f;
+    /* ASCII value of "OSRELEAS" */
+    osrelease = 0x5341454c4552534f;
+
+    /* On AArch64 we already scanned vmcoreinfo from guest RAM. */
+    if (vmcoreinfo_buf) {
+        buf = vmcoreinfo_buf;
+        buf[vmcoreinfo_size] = '\n';
+        if (KDEBUG(2)) {
+            for (size_t i = 0; i < vmcoreinfo_size; i++) {
+                fprintf(fp, "%c", buf[i]);
+            }
+            fprintf(fp, "\n");
+        }
+        return;
+    }
 
     get_symbol_data("vmcoreinfo_size", sizeof(vmcoreinfo_size), &vmcoreinfo_size);
     vmcoreinfo_size &= ((1<<13) - 1);
@@ -104,21 +112,19 @@ void vmcoreinfo_init()
     vmcoreinfo_buf = xmalloc(vmcoreinfo_size + 1);
     buf = vmcoreinfo_buf;
 
-    get_symbol_data("vmcoreinfo_data", sizeof(vmcoreinfo_data), &vmcoreinfo_data);
+    get_symbol_data("vmcoreinfo_data", sizeof(vmcoreinfo_data_sym), &vmcoreinfo_data_sym);
 
-    // For legacy kernels like CentOS 3.10.x, the type of vmcoreinfo_data is string array
-    // instead of char pointer, get_symbol_data would simply return the string itself
-    // instead of address, which is not what we want.
-    //
-    // The best way to deal with it is get vmcoreinfo_data data type via tools like
-    // gdb, just like crash utility
-    if (vmcoreinfo_data == osrelease)
-    {
-        vmcoreinfo_data = symbol_value("vmcoreinfo_data");
-        vmcoreinfo_data -= kt->relocate;
+    /*
+     * For legacy kernels like CentOS 3.10.x, the type of vmcoreinfo_data is
+     * string array instead of char pointer, get_symbol_data would simply
+     * return the string itself instead of address, which is not what we want.
+     */
+    if (vmcoreinfo_data_sym == osrelease) {
+        vmcoreinfo_data_sym = symbol_value("vmcoreinfo_data");
+        vmcoreinfo_data_sym -= kt->relocate;
     }
 
-    if (readmem(vmcoreinfo_data, KVADDR, buf, vmcoreinfo_size)) {
+    if (readmem(vmcoreinfo_data_sym, KVADDR, buf, vmcoreinfo_size)) {
         pr_err("cannot read vmcoreinfo_data\n");
         goto err;
     }

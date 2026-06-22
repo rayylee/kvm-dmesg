@@ -36,7 +36,13 @@ int symbol_needed(const char *symbol)
         "vmcoreinfo_size",
         "page_offset_base",
         "vmalloc_base",
-        "prb"
+        "prb",
+        /* AArch64 specific symbols */
+        "kimage_voffset",
+        "memstart_addr",
+        "swapper_pg_dir",
+        "_text",
+        "_stext"
     };
     size_t array_size = sizeof(symtab_array) / sizeof(symtab_array[0]);
 
@@ -134,7 +140,7 @@ ulong symbol_value(char *symbol)
     struct syment *sp;
 
     if (!(sp = symbol_search(symbol))) {
-        pr_err("cannot resolve symbol");
+        pr_err("cannot resolve symbol: %s", symbol);
         return 0;
     }
 
@@ -157,13 +163,18 @@ void get_symbol_data(char *symbol, long size, void *local)
         readmem(relocate(sp->value), KVADDR, local, size);
     }
     else
-        pr_err("cannot resolve symbol");
+        pr_err("cannot resolve symbol: %s", symbol);
 }
 
 void symtab_init(const char *map_file)
 {
     symname_hash_init(map_file);
 
+#ifdef __aarch64__
+    /* x86-specific exception table symbols are not present on AArch64. */
+    st->divide_error_vmlinux = 0;
+    st->idt_table_vmlinux = 0;
+#else
     if (kernel_symbol_exists("asm_exc_divide_error")) {
         st->divide_error_vmlinux = symbol_value("asm_exc_divide_error");
     } else {
@@ -171,4 +182,5 @@ void symtab_init(const char *map_file)
     }
 
     st->idt_table_vmlinux = symbol_value("idt_table");
+#endif
 }

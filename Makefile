@@ -8,7 +8,17 @@ ifeq ($(STATIC), y)
 	LDFLAGS += -static
 endif
 
+ARCH ?= $(shell uname -m)
+ifeq ($(ARCH),x86_64)
+	ARCH_SRC := arch/x86_64.c
+else ifeq ($(ARCH),aarch64)
+	ARCH_SRC := arch/aarch64.c
+else
+	$(error unsupported architecture: $(ARCH))
+endif
+
 SRC = main.c \
+	  $(ARCH_SRC) \
 	  log.c \
 	  kernel.c \
 	  version.c \

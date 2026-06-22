@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <sys/types.h>
 
 typedef enum {
     GUEST_NAME,
@@ -56,5 +57,7 @@ int file_client_init(char *sock_path);
 int file_client_uninit();
 int file_get_registers(uint64_t *idtr, uint64_t *cr3, uint64_t *cr4);
 int file_readmem(uint64_t addr, void *buffer, size_t size);
+
+extern guest_client_t *guest_client;
 
 #endif

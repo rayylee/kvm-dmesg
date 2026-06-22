@@ -191,6 +191,11 @@ struct machine_specific {
     ulong pgdir_shift;
     ulong ptrs_per_pgd;
     ulong physical_mask_shift;
+
+    /* AArch64 specific */
+    ulong kimage_voffset;   /* kernel virtual address - physical address */
+    ulong kimage_vaddr;     /* runtime KIMAGE_VADDR (start of kernel image) */
+    ulong kaslr_offset;     /* KASLR randomization offset */
 };
 
 #define PAGE_OFFSET     (machdep->machspec->page_offset)
@@ -241,6 +246,8 @@ extern struct offset_table offset_table;
 extern struct size_table size_table;
 extern struct vm_table vm_table, *vt;
 extern struct symbol_table_data symbol_table_data, *st;
+extern char *vmcoreinfo_buf;
+extern size_t vmcoreinfo_size;
 
 
 /*

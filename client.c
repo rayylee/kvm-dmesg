@@ -2,6 +2,8 @@
 #include "xutil.h"
 #include "mem.h"
 #include "client.h"
+#include "arch.h"
+#include "log.h"
 
 guest_client_t *guest_client = NULL;
 
@@ -18,11 +20,8 @@ int readmem(uint64_t addr, int memtype, void *buffer, long size)
 
     switch (memtype) {
         case KVADDR:
-            if (addr >= __START_KERNEL_map) {
-                paddr = ((addr) - (ulong)__START_KERNEL_map + machdep->machspec->phys_base);
-            } else {
-                paddr = ((addr) - PAGE_OFFSET);
-            }
+            if (arch_kvtop(addr, &paddr) < 0)
+                return -1;
             break;
         case PHYSADDR:
             paddr = addr;
@@ -39,6 +38,7 @@ int guest_client_new(char *ac, guest_access_t ty)
 
     guest_client_t *c = xcalloc(1, sizeof(guest_client_t));
     c->ty = ty;
+
     switch(c->ty) {
         case GUEST_NAME:
             if (libvirt_client_init(ac))
@@ -49,7 +49,11 @@ int guest_client_new(char *ac, guest_access_t ty)
             } else {
                 c->readmem = libvirt_readmem;
             }
+#ifdef __aarch64__
+            c->get_registers = NULL;
+#else
             c->get_registers = libvirt_get_registers;
+#endif
             break;
         case GUEST_MEMORY:
             if (file_client_init(ac))
@@ -66,7 +70,11 @@ int guest_client_new(char *ac, guest_access_t ty)
             } else {
                 c->readmem = qmp_readmem;
             }
+#ifdef __aarch64__
+            c->get_registers = NULL;
+#else
             c->get_registers = qmp_get_registers;
+#endif
             break;
     }
     guest_client = c;

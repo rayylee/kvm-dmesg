@@ -8,7 +8,7 @@
 - **Two Connection Methods**: It supports two different interfaces for log retrieval:
   - **libvirt Interface**: Fetch logs from VMs managed through the libvirt virtualization API.
   - **QMP Socket**: Connect directly to the QEMU monitor protocol (QMP) socket for communication.
-- **x86_64 Linux VM Support**: This tool currently supports only x86_64 Linux virtual machines.
+- **x86_64 and AArch64 Linux VM Support**: Supports both x86_64 and AArch64 Linux virtual machines.
 - **System.map Symbol Table**: `kvm-dmesg` requires access to the guest VM's `System.map` symbol table to map kernel log addresses to human-readable symbols.
 
 ## Compilation
@@ -67,7 +67,7 @@ $ ./kvm-dmesg /tmp/qmp.sock System.map-5.15.171
 
 - Linux-based host with KVM support.
 - Libvirt or access to the QMP socket for the virtual machine.
-- The tool currently only supports x86_64 Linux guests.
+- The tool supports x86_64 and AArch64 Linux guests.
 - The guest's `System.map` file must be available for symbol resolution.
 
 ## Acknowledgments

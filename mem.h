@@ -20,11 +20,13 @@
 
 typedef struct {
     int mem_fd;
+    pid_t pid;
     int (*gpa2hva)(uint64_t gpa, uint64_t *hva);
 } proc_mem_t;
 
 int mem_init(pid_t pid, int (*gpa2hva)(uint64_t, uint64_t*));
 int mem_uninit();
 int mem_read(uint64_t addr, void *buffer, size_t size);
+int mem_scan_vmcoreinfo(char *buf, size_t buf_size);
 
 #endif

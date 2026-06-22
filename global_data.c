@@ -34,3 +34,6 @@ struct machdep_table *machdep = &machdep_table;
 
 struct offset_table offset_table = { 0 };
 struct size_table size_table = { 0 };
+
+char *vmcoreinfo_buf = NULL;
+size_t vmcoreinfo_size = 0;
